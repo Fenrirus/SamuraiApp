@@ -20,6 +20,55 @@ namespace SamuraiApp.UI
             _context.SaveChanges();
         }
 
+        private static void AddSamuraiToExistingSauraiNotTracked(int SamuraiId)
+        {
+            var samurai = _context.Samurais.Find(SamuraiId);
+            samurai.Quotes.Add(new Quote { Text = "Oddam życie za horde" });
+            using (var newContext = new SamuraiContext())
+            {
+                //newContext.Samurais.Update(samurai);
+                //attach nie updateuje jeszcze samurai jest szybsze
+                newContext.Samurais.Attach(samurai);
+                newContext.SaveChanges();
+            }
+        }
+
+        private static void AddSamuraiToExistingSauraiWhileTracked()
+        {
+            var samurai = _context.Samurais.FirstOrDefault();
+            samurai.Quotes.Add(new Quote { Text = "Poznaj magie mojego miecza" });
+            _context.SaveChanges();
+        }
+
+        private static void AddSamuraiWithAQuote()
+        {
+            var samurai = new Samurai
+            {
+                Name = "Robert",
+                Quotes = new List<Quote>
+                {
+                    new Quote{ Text = "Lok Tar Ogar"}
+                }
+            };
+            _context.Samurais.Add(samurai);
+            _context.SaveChanges();
+        }
+
+        private static void AddSamuraiWithManyQuote()
+        {
+            var samurai = new Samurai
+            {
+                Name = "Robert",
+                Quotes = new List<Quote>
+                {
+                    new Quote{ Text = "Lok Tar Ogar"},
+                    new Quote{ Text = "Praca praca"},
+                }
+            };
+            _context.Samurais.Add(samurai);
+            _context.SaveChanges();
+        }
+
         private static void AddVariousTypes()
         {
             _context.Samurais.AddRange(
@@ -36,6 +85,14 @@ namespace SamuraiApp.UI
             var samurai = _context.Samurais.Find(6);
             _context.Samurais.Remove(samurai);
             _context.SaveChanges();
+        }
+
+        private static void EagerLoadSamuraiWithQuotes()
+        {
+            // var samuraiWitjquotes = _context.Samurais.Include(s => s.Quotes).ToList();
+            // var samuraiWitjquotes = _context.Samurais.AsSplitQuery().Include(s => s.Quotes).ToList();
+            // var filteringQuotes = _context.Samurais.Include(s => s.Quotes.Where(q => q.Text == "Lok Tar Ogar")).ToList();
+            var filteringQuotes2 = _context.Samurais.Where(w => w.Name == "Robert").Include(s => s.Quotes).ToList();
         }
 
         private static void GetSamurais(string text)
@@ -61,7 +118,12 @@ namespace SamuraiApp.UI
             // Update();
             //UpdateMultiple();
             //Delete();
-            QuerryBattlesDisconected();
+            //QuerryBattlesDisconected();
+            // AddSamuraiWithAQuote();
+            //AddSamuraiWithManyQuote();
+            //AddSamuraiToExistingSauraiWhileTracked();
+            // AddSamuraiToExistingSauraiNotTracked(1);
+            EagerLoadSamuraiWithQuotes();
             Console.ReadKey();
         }
 
