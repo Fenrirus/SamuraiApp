@@ -27,7 +27,7 @@ namespace SamuraiApp.UI
             using (var newContext = new SamuraiContext())
             {
                 //newContext.Samurais.Update(samurai);
-                //attach nie updateuje jeszcze samurai jest szybsze
+                //attach nie updateuje samurai jest szybsze
                 newContext.Samurais.Attach(samurai);
                 newContext.SaveChanges();
             }
@@ -95,6 +95,22 @@ namespace SamuraiApp.UI
             var filteringQuotes2 = _context.Samurais.Where(w => w.Name == "Robert").Include(s => s.Quotes).ToList();
         }
 
+        private static void ExpicitLoadQuotes()
+        {
+            _context.Set<Horse>().Add(new Horse { SamuraiId = 1, Name = "Wolf" });
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var samurai = _context.Samurais.Find(1);
+            _context.Entry(samurai).Collection(s => s.Quotes).Load();
+            _context.Entry(samurai).Reference(s => s.Horse).Load();
+        }
+
+        private static void FilteringWithReletedData()
+        {
+            var samurai = _context.Samurais.Where(w => w.Quotes.Any(a => a.Text.Contains("Lok"))).ToList();
+        }
+
         private static void GetSamurais(string text)
         {
             var samurais = _context.Samurais
@@ -123,8 +139,41 @@ namespace SamuraiApp.UI
             //AddSamuraiWithManyQuote();
             //AddSamuraiToExistingSauraiWhileTracked();
             // AddSamuraiToExistingSauraiNotTracked(1);
-            EagerLoadSamuraiWithQuotes();
+            // EagerLoadSamuraiWithQuotes();
+            // ProjectSamuraiWithQuotes();
+            // ExpicitLoadQuotes();
+            // FilteringWithReletedData();
+            // ModifyReltedDataWhenTracked();
+            ModifyReltedDataWhenNotTracked();
             Console.ReadKey();
+        }
+
+        private static void ModifyReltedDataWhenNotTracked()
+        {
+            var samurai = _context.Samurais.Include(s => s.Quotes).FirstOrDefault(f => f.Id == 1);
+            var quote = samurai.Quotes[0];
+            quote.Text = "Moje ostrze szuka zemsty";
+
+            using var newcontext = new SamuraiContext();
+            newcontext.Entry(quote).State = EntityState.Modified;
+            newcontext.SaveChanges();
+        }
+
+        private static void ModifyReltedDataWhenTracked()
+        {
+            var samurai = _context.Samurais.Include(s => s.Quotes).FirstOrDefault(f => f.Id == 1);
+            samurai.Quotes[0].Text = "Co mam dla ciebie zrobić";
+            _context.SaveChanges();
+        }
+
+        private static void ProjectSamuraiWithQuotes()
+        {
+            //var somePropsWithQuotes = _context.Samurais.Select(s => new { s.Id, s.Name, NumberOfQuotes = s.Quotes.Count }).ToList();
+
+            //var somePropsWithQuotes2 = _context.Samurais.Select(s => new { s.Id, s.Name, LokQuotes = s.Quotes.Where(q => q.Text.Contains("Lok")) }).ToList();
+
+            var samuraiQuotes = _context.Samurais.Select(s => new { Samurai = s, LokQuotes = s.Quotes.Where(q => q.Text.Contains("Lok")) }).ToList();
+            var firstSamurai = samuraiQuotes[0].Samurai.Name += "King";
         }
 
         private static void QuerryBattlesDisconected()
