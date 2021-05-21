@@ -11,16 +11,40 @@ namespace SamuraiApp.UI
     {
         private static SamuraiContext _context = new SamuraiContext();
 
-        private static void AddSamuraiByName(params string[] names)
+        private static void AddAllSamuraiToAllBattles()
         {
-            foreach (var name in names)
+            var samurais = _context.Samurais.Where(w => w.Id != 9).ToList();
+            var battles = _context.Battles.ToList();
+
+            foreach (var battle in battles)
             {
-                _context.Samurais.Add(new Samurai { Name = name });
+                battle.Samurais.AddRange(samurais);
             }
             _context.SaveChanges();
         }
 
-        private static void AddSamuraiToExistingSauraiNotTracked(int SamuraiId)
+        private static void AddHorseToSamurai()
+        {
+            var samurai = _context.Samurais.Find(9);
+            samurai.Horse = new Horse { Name = "Wolf" };
+            _context.SaveChanges();
+        }
+
+        private static void AddNewSamuraiToExistingBattle()
+        {
+            var battle = _context.Battles.FirstOrDefault();
+            battle.Samurais.Add(new Samurai { Name = "Grom Hellscream" });
+            _context.SaveChanges();
+        }
+
+        private static void AddQuotesToExistingSamuraiWhileTracked()
+        {
+            var samurai = _context.Samurais.FirstOrDefault();
+            samurai.Quotes.Add(new Quote { Text = "Poznaj magie mojego miecza" });
+            _context.SaveChanges();
+        }
+
+        private static void AddQuotesToExistingSanuraiNotTracked(int SamuraiId)
         {
             var samurai = _context.Samurais.Find(SamuraiId);
             samurai.Quotes.Add(new Quote { Text = "Oddam życie za horde" });
@@ -33,10 +57,12 @@ namespace SamuraiApp.UI
             }
         }
 
-        private static void AddSamuraiToExistingSauraiWhileTracked()
+        private static void AddSamuraiByName(params string[] names)
         {
-            var samurai = _context.Samurais.FirstOrDefault();
-            samurai.Quotes.Add(new Quote { Text = "Poznaj magie mojego miecza" });
+            foreach (var name in names)
+            {
+                _context.Samurais.Add(new Samurai { Name = name });
+            }
             _context.SaveChanges();
         }
 
@@ -144,7 +170,14 @@ namespace SamuraiApp.UI
             // ExpicitLoadQuotes();
             // FilteringWithReletedData();
             // ModifyReltedDataWhenTracked();
-            ModifyReltedDataWhenNotTracked();
+            // ModifyReltedDataWhenNotTracked();
+            // AddNewSamuraiToExistingBattle();
+            //ReturnBattleWithSamurai();
+            // AddAllSamuraiToAllBattles();
+
+            //RemoveSamuraiFromBattle();
+            //RemoveSamuraiFromBattleExpilicit();
+            AddHorseToSamurai();
             Console.ReadKey();
         }
 
@@ -202,6 +235,32 @@ namespace SamuraiApp.UI
             var contains = _context.Samurais.Where(s => s.Name.Contains("Rob")).ToList();
             //find is dbset method it can avoid database query
             var samurai2 = _context.Samurais.Find(2);
+        }
+
+        private static void RemoveSamuraiFromBattle()
+        {
+            var battleSamurai = _context.Battles.Include(b => b.Samurais.Where(w => w.Id == 9)).Single(s => s.BattleId == 1);
+            var samurai = battleSamurai.Samurais[0];
+
+            battleSamurai.Samurais.Remove(samurai);
+            _context.SaveChanges();
+        }
+
+        private static void RemoveSamuraiFromBattleExpilicit()
+        {
+            var battleSamurai = _context.Set<BattleSamurai>().SingleOrDefault(s => s.BattleId == 1 && s.SamuraiId == 8);
+
+            if (battleSamurai != null)
+            {
+                _context.Remove(battleSamurai);
+                _context.SaveChanges();
+            }
+        }
+
+        private static void ReturnBattleWithSamurai()
+        {
+            var battle = _context.Battles.Include(s => s.Samurais).FirstOrDefault();
+            var battles = _context.Battles.Include(s => s.Samurais).ToList();
         }
 
         private static void Update()
