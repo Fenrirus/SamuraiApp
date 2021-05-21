@@ -121,6 +121,12 @@ namespace SamuraiApp.UI
             var filteringQuotes2 = _context.Samurais.Where(w => w.Name == "Robert").Include(s => s.Quotes).ToList();
         }
 
+        private static void ExecuteSomeRawSql()
+        {
+            var samuraiId = 2;
+            var affected = _context.Database.ExecuteSqlRaw($"EXEC DeleteQuotesForSamurai{0}", samuraiId);
+        }
+
         private static void ExpicitLoadQuotes()
         {
             _context.Set<Horse>().Add(new Horse { SamuraiId = 1, Name = "Wolf" });
@@ -177,7 +183,13 @@ namespace SamuraiApp.UI
 
             //RemoveSamuraiFromBattle();
             //RemoveSamuraiFromBattleExpilicit();
-            AddHorseToSamurai();
+            //AddHorseToSamurai();
+
+            //QuerySamuraiBattleStats();
+            //RawSql();
+            QuerySPByRawSql();
+            ExecuteSomeRawSql();
+
             Console.ReadKey();
         }
 
@@ -235,6 +247,26 @@ namespace SamuraiApp.UI
             var contains = _context.Samurais.Where(s => s.Name.Contains("Rob")).ToList();
             //find is dbset method it can avoid database query
             var samurai2 = _context.Samurais.Find(2);
+        }
+
+        private static void QuerySamuraiBattleStats()
+        {
+            var battlestats = _context.SamurailBattleStats.ToList();
+        }
+
+        private static void QuerySPByRawSql()
+        {
+            var text = "Lok";
+            var samurai = _context.Samurais.FromSqlRaw(
+                "EXEC dbo.SamuraisWhoSaidAWord {0}", text).ToList();
+        }
+
+        private static void RawSql()
+        {
+            var samurais = _context.Samurais.FromSqlRaw("select * from samurais").ToList();
+
+            var name = "Robert";
+            var samurai = _context.Samurais.FromSqlInterpolated($"select * from samurais where name = {name}").FirstOrDefault();
         }
 
         private static void RemoveSamuraiFromBattle()
